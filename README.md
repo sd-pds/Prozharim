@@ -1,1 +1,3 @@
-# Prozharim
+# Ресторан "Прожарим"
+
+Разработано POLIHOV DEV STUDIO
