@@ -753,3 +753,6 @@ select option{
 
 .businessNotice{padding:12px 14px;border-radius:16px;background:rgba(255,106,61,.10);border:1px solid rgba(255,106,61,.22);color:#ffe1d5;font-size:13px;line-height:1.45;margin:0 0 14px;}
 .seg__btn.isDisabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
+
+
+.seoContent{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;}
