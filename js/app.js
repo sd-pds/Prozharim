@@ -4,7 +4,165 @@
    Отправка заказа: через API (Cloudflare Worker / Netlify Function)
 */
 
-const ORDER_API_URL = "https://prozharim-oreder-api.polihov-alexey-a.workers.dev";
+let ORDER_API_URL = "https://prozharim-oreder-api.polihov-alexey-a.workers.dev";
+
+
+
+const THEME_PRESETS = {
+  red: { accent:'#ff2b2b', accent2:'#ff5a2b', accentSoft:'#ffcc7a' },
+  orange: { accent:'#ff7a18', accent2:'#ff9f1a', accentSoft:'#ffd68a' },
+  yellow: { accent:'#e8b100', accent2:'#ffd000', accentSoft:'#fff0a6' },
+  green: { accent:'#12b76a', accent2:'#24d17e', accentSoft:'#a4f4c5' },
+  cyan: { accent:'#00bcd4', accent2:'#22d3ee', accentSoft:'#a5f3fc' },
+  blue: { accent:'#2563eb', accent2:'#3b82f6', accentSoft:'#93c5fd' },
+  purple: { accent:'#7c3aed', accent2:'#a855f7', accentSoft:'#d8b4fe' },
+  gray: { accent:'#6b7280', accent2:'#9ca3af', accentSoft:'#d1d5db' },
+  black: { accent:'#111111', accent2:'#2b2b2b', accentSoft:'#999999' }
+};
+const THEME_MODES = {
+  dark: { bg:'#070708', bg2:'#0b0b0d', card:'rgba(255,255,255,.06)', card2:'rgba(255,255,255,.08)', stroke:'rgba(255,255,255,.12)', txt:'#f3f3f4', muted:'rgba(243,243,244,.72)', shadow:'0 20px 60px rgba(0,0,0,.55)' },
+  light: { bg:'#f4f5f7', bg2:'#ffffff', card:'rgba(255,255,255,.85)', card2:'rgba(255,255,255,.95)', stroke:'rgba(15,23,42,.10)', txt:'#111827', muted:'rgba(17,24,39,.68)', shadow:'0 20px 60px rgba(15,23,42,.12)' }
+};
+let SITE_CONFIG = null;
+let THEME_CONFIG = null;
+let NOTIFICATIONS_CONFIG = null;
+
+function hexToRgbTriplet(hex) {
+  const clean = String(hex || '').replace('#', '');
+  if (clean.length !== 6) return '255,43,43';
+  const int = parseInt(clean, 16);
+  return `${(int >> 16) & 255},${(int >> 8) & 255},${int & 255}`;
+}
+async function loadJsonSafe(path, fallback = null) {
+  try {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(path);
+    return await res.json();
+  } catch {
+    return fallback;
+  }
+}
+function applyMeta(id, value, attr = 'content') {
+  const el = document.getElementById(id);
+  if (el && value) el.setAttribute(attr, value);
+}
+function htmlEscape(value) {
+  return String(value ?? '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+}
+function normalizePhone(phone) {
+  return String(phone || '').replace(/[^\d+]/g, '');
+}
+function socialButtonMarkup(item = {}) {
+  const isDownload = item.download ? ' download' : '';
+  return `<a class="socialBtn" href="${htmlEscape(item.href || '#')}"${isDownload} aria-label="${htmlEscape(item.label || 'Ссылка')}"><span>${htmlEscape(item.label || 'Ссылка')}</span></a>`;
+}
+function promoMarkup(item = {}) {
+  const img = item.image ? `<img class="promoSlide__img" src="${htmlEscape(item.image)}" alt="${htmlEscape(item.title || 'Акция')}">` : '';
+  const content = item.title || item.text || item.badge ? `<div class="promoSlide__content">${item.badge ? `<div class="promoSlide__badge">${htmlEscape(item.badge)}</div>` : ''}${item.title ? `<div class="promoSlide__title">${htmlEscape(item.title)}</div>` : ''}${item.text ? `<div class="promoSlide__text">${htmlEscape(item.text)}</div>` : ''}${item.link ? `<a class="btn btn--ghost" href="${htmlEscape(item.link)}">Подробнее</a>` : ''}</div>` : '';
+  return `<article class="promoSlide">${img}${content}</article>`;
+}
+function renderHeroStats(stats = []) {
+  const wrap = document.getElementById('heroStats');
+  if (!wrap) return;
+  wrap.innerHTML = (stats || []).map(item => `<div class="stat"><div class="stat__num">${htmlEscape(item.value || '')}</div><div class="stat__txt">${htmlEscape(item.label || '')}</div></div>`).join('');
+}
+function applyThemeConfig(theme = {}) {
+  THEME_CONFIG = theme || {};
+  const preset = THEME_PRESETS[theme.preset] || THEME_PRESETS.red;
+  const mode = THEME_MODES[theme.mode] || THEME_MODES.dark;
+  const root = document.documentElement;
+  root.dataset.themePreset = theme.preset || 'red';
+  root.dataset.themeMode = theme.mode || 'dark';
+  root.style.setProperty('--accent', preset.accent);
+  root.style.setProperty('--accent2', preset.accent2);
+  root.style.setProperty('--accentSoft', preset.accentSoft);
+  root.style.setProperty('--accentRgb', hexToRgbTriplet(preset.accent));
+  root.style.setProperty('--accent2Rgb', hexToRgbTriplet(preset.accent2));
+  root.style.setProperty('--accentSoftRgb', hexToRgbTriplet(preset.accentSoft));
+  for (const [k, v] of Object.entries(mode)) root.style.setProperty(`--${k}`, v);
+  if (theme.radius) root.style.setProperty('--r', `${theme.radius}px`);
+  if (theme.radiusLarge) root.style.setProperty('--r2', `${theme.radiusLarge}px`);
+  const customCss = document.getElementById('customThemeStylesheet');
+  if (customCss && theme.customCssPath) customCss.href = `${theme.customCssPath}?v=${Date.now()}`;
+}
+function applySiteConfig(cfg = {}) {
+  SITE_CONFIG = cfg || {};
+  const seo = cfg.seo || {};
+  if (seo.title) document.title = seo.title;
+  applyMeta('metaDescription', seo.description);
+  applyMeta('metaKeywords', seo.keywords);
+  applyMeta('canonicalLink', seo.canonical, 'href');
+  applyMeta('ogTitle', seo.title);
+  applyMeta('ogDescription', seo.description);
+  applyMeta('ogSiteName', cfg.brand?.name || '');
+  applyMeta('ogUrl', seo.canonical);
+  const ogImage = new URL(cfg.brand?.logo || 'assets/logo.png', location.href).href;
+  applyMeta('ogImage', ogImage);
+  applyMeta('twitterTitle', seo.title);
+  applyMeta('twitterDescription', seo.description);
+  applyMeta('twitterImage', ogImage);
+  const fav = document.getElementById('faviconLink');
+  if (fav && cfg.brand?.logo) fav.href = cfg.brand.logo;
+  const logo = document.getElementById('brandLogo');
+  if (logo && cfg.brand?.logo) { logo.src = cfg.brand.logo; logo.alt = cfg.brand?.name || 'logo'; }
+  const brandLink = document.querySelector('.brand');
+  if (brandLink && cfg.brand?.name) brandLink.setAttribute('aria-label', cfg.brand.name);
+  const setText = (id, value) => { const el = document.getElementById(id); if (el && value !== undefined) el.textContent = value; };
+  setText('brandName', cfg.brand?.name);
+  setText('brandSub', cfg.brand?.sub);
+  setText('navMenuLink', cfg.navigation?.menu);
+  setText('navPromotionsLink', cfg.navigation?.promotions);
+  setText('navDeliveryLink', cfg.navigation?.delivery);
+  setText('navContactsLink', cfg.navigation?.contacts);
+  setText('heroPill', cfg.brand?.cityPill);
+  setText('heroTitleText', cfg.hero?.title);
+  setText('heroAccent', cfg.hero?.accent);
+  setText('heroDesc', cfg.hero?.description);
+  setText('heroPrimaryBtn', cfg.hero?.ctaPrimary);
+  setText('heroSecondaryBtn', cfg.hero?.ctaSecondary);
+  setText('hitsBadge', cfg.hero?.hitsBadge);
+  setText('hitsTitle', cfg.hero?.hitsTitle);
+  setText('hitsHint', cfg.hero?.hitsHint);
+  renderHeroStats(cfg.stats || []);
+  setText('deliveryTitle', cfg.delivery?.title);
+  setText('pickupTitle', cfg.delivery?.pickupTitle);
+  setText('pickupText', cfg.delivery?.pickupText);
+  const pp = document.getElementById('pickupPoints');
+  if (pp && Array.isArray(cfg.delivery?.pickupPoints)) pp.innerHTML = cfg.delivery.pickupPoints.map(x => `<li>${htmlEscape(x)}</li>`).join('');
+  const pickupSelect = document.querySelector('select[name="pickupAddress"]');
+  if (pickupSelect && Array.isArray(cfg.delivery?.pickupPoints)) pickupSelect.innerHTML = cfg.delivery.pickupPoints.map(x => `<option>${htmlEscape(x)}</option>`).join('');
+  setText('deliveryCardTitle', cfg.delivery?.deliveryTitle);
+  setText('deliveryCardText', cfg.delivery?.deliveryText);
+  setText('paymentTitle', cfg.delivery?.paymentTitle);
+  const paymentText = document.getElementById('paymentText');
+  if (paymentText && Array.isArray(cfg.delivery?.paymentItems)) paymentText.innerHTML = cfg.delivery.paymentItems.map(x => `• ${htmlEscape(x)}`).join('<br>');
+  const contactTitle = document.getElementById('contactsTitle'); if (contactTitle && cfg.contacts?.title) contactTitle.textContent = cfg.contacts.title;
+  const cards = document.getElementById('contactsCards');
+  if (cards && Array.isArray(cfg.contacts?.phones)) cards.innerHTML = cfg.contacts.phones.map(phone => `<div class="contactCard"><div class="contactCard__label">Телефон</div><a class="contactCard__value" href="tel:${htmlEscape(normalizePhone(phone))}">${htmlEscape(phone)}</a></div>`).join('');
+  const actions = document.getElementById('contactActions');
+  if (actions && Array.isArray(cfg.contacts?.socialButtons)) actions.innerHTML = cfg.contacts.socialButtons.map(socialButtonMarkup).join('');
+  const footerText = document.getElementById('footerText'); if (footerText && cfg.footer?.text) footerText.innerHTML = cfg.footer.text;
+  const footerPolicy = document.getElementById('footerPolicyLink'); if (footerPolicy && cfg.footer?.policyLabel) footerPolicy.textContent = cfg.footer.policyLabel;
+  const promoSlider = document.getElementById('promoSlider'); if (promoSlider && Array.isArray(cfg.promotions)) promoSlider.innerHTML = cfg.promotions.filter(item => item && (item.image || item.title || item.text)).map(promoMarkup).join('');
+  const seoTitle = document.getElementById('seoTitle'); if (seoTitle && cfg.seoText?.title) seoTitle.textContent = cfg.seoText.title;
+  const seoParagraphs = document.getElementById('seoParagraphs'); if (seoParagraphs && Array.isArray(cfg.seoText?.paragraphs)) seoParagraphs.innerHTML = cfg.seoText.paragraphs.map(p => `<p>${htmlEscape(p)}</p>`).join('');
+  if (cfg.businessRules) {
+    MIN_DELIVERY_SUBTOTAL = Number(cfg.businessRules.minDeliverySubtotal ?? MIN_DELIVERY_SUBTOTAL);
+    SMALL_ORDER_DELIVERY_SURCHARGE = Number(cfg.businessRules.smallOrderDeliverySurcharge ?? SMALL_ORDER_DELIVERY_SURCHARGE);
+    BUSINESS_RULES = { ...BUSINESS_RULES, ...cfg.businessRules };
+  }
+}
+async function loadRuntimeConfig() {
+  const [siteCfg, themeCfg, notificationsCfg] = await Promise.all([
+    loadJsonSafe('config/site.json', {}),
+    loadJsonSafe('config/theme.json', {}),
+    loadJsonSafe('config/notifications.json', {})
+  ]);
+  NOTIFICATIONS_CONFIG = notificationsCfg || {};
+  if (notificationsCfg?.orderApiUrl) ORDER_API_URL = notificationsCfg.orderApiUrl;
+  applyThemeConfig(themeCfg || {});
+  applySiteConfig(siteCfg || {});
+}
 
 const els = {
   products: document.getElementById("products"),
@@ -57,9 +215,9 @@ const suggestBox = document.getElementById("addressSuggest");
 
 const STORAGE_KEY = "prozharim_local_v1";
 const ORENBURG_UTC_OFFSET_MS = 5 * 60 * 60 * 1000;
-const MIN_DELIVERY_SUBTOTAL = 700;
-const SMALL_ORDER_DELIVERY_SURCHARGE = 150;
-const BUSINESS_RULES = {
+let MIN_DELIVERY_SUBTOTAL = 700;
+let SMALL_ORDER_DELIVERY_SURCHARGE = 150;
+let BUSINESS_RULES = {
   nightStart: 23 * 60,
   nightEnd: 3 * 60,
   closedStart: 3 * 60 + 1,
@@ -1493,6 +1651,7 @@ function setupBackToTop() {
 /* ===== Init ===== */
 
 async function init() {
+  await loadRuntimeConfig();
   els.openCart.addEventListener("click", openDrawer);
   els.closeCart.addEventListener("click", closeDrawer);
   els.closeCart2.addEventListener("click", closeDrawer);

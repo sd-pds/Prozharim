@@ -756,3 +756,46 @@ select option{
 
 
 .seoContent{position:absolute!important;left:-9999px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;pointer-events:none!important;}
+
+:root[data-theme-mode="light"] body{
+  color:var(--txt);
+}
+:root[data-theme-mode="light"] .header{
+  background:rgba(255,255,255,.78);
+  border-bottom:1px solid rgba(15,23,42,.08);
+}
+:root[data-theme-mode="light"] .nav__link,
+:root[data-theme-mode="light"] .hero__desc,
+:root[data-theme-mode="light"] .stat__txt,
+:root[data-theme-mode="light"] .infoCard__text,
+:root[data-theme-mode="light"] .muted,
+:root[data-theme-mode="light"] .contactCard__label,
+:root[data-theme-mode="light"] .flameCard__hint{
+  color:var(--muted);
+}
+:root[data-theme-mode="light"] .cartBtn,
+:root[data-theme-mode="light"] .btn,
+:root[data-theme-mode="light"] .pill,
+:root[data-theme-mode="light"] .stat,
+:root[data-theme-mode="light"] .card,
+:root[data-theme-mode="light"] .infoCard,
+:root[data-theme-mode="light"] .contactCard,
+:root[data-theme-mode="light"] .product,
+:root[data-theme-mode="light"] .drawer,
+:root[data-theme-mode="light"] .modal__dialog,
+:root[data-theme-mode="light"] .search input,
+:root[data-theme-mode="light"] .selectNative,
+:root[data-theme-mode="light"] .field input,
+:root[data-theme-mode="light"] .field textarea,
+:root[data-theme-mode="light"] .field select{
+  border-color:rgba(15,23,42,.1);
+  background:rgba(255,255,255,.82);
+  color:var(--txt);
+}
+:root[data-theme-mode="light"] .bg{
+  background:
+    radial-gradient(1200px 600px at 18% 10%, rgba(var(--accentRgb),.10), transparent 55%),
+    radial-gradient(900px 600px at 85% 25%, rgba(var(--accent2Rgb),.08), transparent 55%),
+    radial-gradient(800px 600px at 50% 120%, rgba(var(--accentSoftRgb),.06), transparent 55%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
