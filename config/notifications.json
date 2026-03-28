@@ -1,5 +1,5 @@
 {
-  "orderApiUrl": "https://prozharim-oreder-api.polihov-alexey-a.workers.dev",
+  "orderApiUrl": "https://api.полихов.рф",
   "channels": {
     "telegram": [
       {

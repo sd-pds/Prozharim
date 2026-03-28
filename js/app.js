@@ -4,7 +4,7 @@
    Отправка заказа: через API (Cloudflare Worker / Netlify Function)
 */
 
-let ORDER_API_URL = "https://prozharim-oreder-api.polihov-alexey-a.workers.dev";
+let ORDER_API_URL = "https://api.полихов.рф";
 
 
 
