@@ -1,6 +1,6 @@
 {
   "preset": "red",
-  "mode": "dark",
+  "mode": "light",
   "radius": 18,
   "radiusLarge": 24,
   "customCssPath": "css/custom-theme.css"
