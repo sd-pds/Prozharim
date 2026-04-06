@@ -46,9 +46,7 @@
     "hit": true,
     "img": "./assets/photos/Пицца Пепперони.webp",
     "price": 900,
-    "weight": "670 г",
-    "price2": 500,
-    "weight2": "1 кг"
+    "weight": "670 г"
   },
   {
     "id": "pizza-pepperoni-40-sm",
@@ -168,6 +166,15 @@
     "img": "./assets/photos/Пицца Монтанара.webp"
   },
   {
+    "id": "pizza-pikolini-35-sm",
+    "category": "Пицца",
+    "name": "Пицца \"Пиколини\" 35 см",
+    "desc": "",
+    "price": 750,
+    "weight": "670 г",
+    "img": "./assets/photos/Пицца Пиколини.webp"
+  },
+  {
     "id": "pizza-pikolini-40-sm",
     "category": "Пицца",
     "name": "Пицца \"Пиколини\" 40 см",
@@ -195,15 +202,6 @@
     "img": "./assets/photos/Пицца Ортолано.webp"
   },
   {
-    "id": "pizza-pikolini-35-sm",
-    "category": "Пицца",
-    "name": "Пицца \"Пиколини\" 35 см",
-    "desc": "",
-    "price": 750,
-    "weight": "670 г",
-    "img": "./assets/photos/Пицца Пиколини.webp"
-  },
-  {
     "id": "pizza-proshutto-funge-35-sm",
     "category": "Пицца",
     "name": "Пицца \"Прошутто Фунге\" 35 см",
@@ -222,21 +220,21 @@
     "img": "./assets/photos/Пицца Прошутто Фунге.webp"
   },
   {
-    "id": "pizza-rivera-40-sm",
-    "category": "Пицца",
-    "name": "Пицца \"Ривьера\" 40 см",
-    "desc": "",
-    "price": 1250,
-    "weight": "1000 г",
-    "img": "./assets/photos/Пицца Ривьера.webp"
-  },
-  {
     "id": "pizza-rivera-35-sm",
     "category": "Пицца",
     "name": "Пицца \"Ривьера\" 35 см",
     "desc": "",
     "price": 1490,
     "weight": "700 г",
+    "img": "./assets/photos/Пицца Ривьера.webp"
+  },
+  {
+    "id": "pizza-rivera-40-sm",
+    "category": "Пицца",
+    "name": "Пицца \"Ривьера\" 40 см",
+    "desc": "",
+    "price": 1250,
+    "weight": "1000 г",
     "img": "./assets/photos/Пицца Ривьера.webp"
   },
   {
