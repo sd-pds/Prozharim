@@ -1035,10 +1035,16 @@ function isNightTariff(date = getEffectiveOrderDate()) {
 function getNightMarkup() {
   const subtotal = cartSum();
   const cutleryPrice = getCutleryPrice();
+  const smallOrderSurcharge = getSmallOrderDeliverySurcharge();
+  const deliveryBasePrice =
+    state.mode === "delivery" && state.delivery.available && typeof state.delivery.price === "number"
+      ? state.delivery.price
+      : 0;
+  const deliveryPrice = deliveryBasePrice + (state.mode === "delivery" && state.delivery.available ? smallOrderSurcharge : 0);
 
   if (!isNightTariff(getEffectiveOrderDate())) return 0;
 
-  return Math.round((subtotal + cutleryPrice) * 0.10);
+  return Math.round((subtotal + cutleryPrice + deliveryPrice) * 0.10);
 }
 
 function validateOrderWindow({ whenType, whenDate } = {}) {
