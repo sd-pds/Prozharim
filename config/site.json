@@ -61,20 +61,7 @@
     ]
   },
   "promotions": [
-    {
-      "image": "assets/promos/promo-prozharim-1.svg",
-      "title": "",
-      "text": "",
-      "badge": "",
-      "link": ""
-    },
-    {
-      "image": "assets/promos/promo-prozharim-2.svg",
-      "title": "",
-      "text": "",
-      "badge": "",
-      "link": ""
-    }
+    
   ],
   "contacts": {
     "title": "Контакты",
