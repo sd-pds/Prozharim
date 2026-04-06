@@ -121,7 +121,8 @@ async function renderPromotions(configPromotions = []) {
 function renderHeroStats(stats = []) {
   const wrap = document.getElementById('heroStats');
   if (!wrap) return;
-  wrap.innerHTML = (stats || []).map(item => `<div class="stat"><div class="stat__num">${htmlEscape(item.value || '')}</div><div class="stat__txt">${htmlEscape(item.label || '')}</div></div>`).join('');
+  if (!Array.isArray(stats) || !stats.length) return;
+  wrap.innerHTML = stats.map(item => `<div class="stat"><div class="stat__num">${htmlEscape(item.value || '')}</div><div class="stat__txt">${htmlEscape(item.label || '')}</div></div>`).join('');
 }
 function applyThemeConfig(theme = {}) {
   THEME_CONFIG = theme || {};
@@ -144,81 +145,10 @@ function applyThemeConfig(theme = {}) {
 }
 function applySiteConfig(cfg = {}) {
   SITE_CONFIG = cfg || {};
-  const seo = cfg.seo || {};
-  if (seo.title) document.title = seo.title;
-  applyMeta('metaDescription', seo.description);
-  applyMeta('metaKeywords', seo.keywords);
-  applyMeta('canonicalLink', seo.canonical, 'href');
-  applyMeta('ogTitle', seo.title);
-  applyMeta('ogDescription', seo.description);
-  applyMeta('ogSiteName', cfg.brand?.name || '');
-  applyMeta('ogUrl', seo.canonical);
-  const ogImage = new URL(cfg.brand?.logo || 'assets/logo.png', location.href).href;
-  applyMeta('ogImage', ogImage);
-  applyMeta('twitterTitle', seo.title);
-  applyMeta('twitterDescription', seo.description);
-  applyMeta('twitterImage', ogImage);
-  const fav = document.getElementById('faviconLink');
-  if (fav && cfg.brand?.logo) fav.href = cfg.brand.logo;
-  const logo = document.getElementById('brandLogo');
-  if (logo && cfg.brand?.logo) { logo.src = cfg.brand.logo; logo.alt = cfg.brand?.name || 'logo'; }
-  const brandLink = document.querySelector('.brand');
-  if (brandLink && cfg.brand?.name) brandLink.setAttribute('aria-label', cfg.brand.name);
-  const setText = (id, value) => { const el = document.getElementById(id); if (el && value !== undefined) el.textContent = value; };
-  setText('brandName', cfg.brand?.name);
-  setText('brandSub', cfg.brand?.sub);
-  setText('navMenuLink', cfg.navigation?.menu);
-  setText('navPromotionsLink', cfg.navigation?.promotions);
-  setText('navDeliveryLink', cfg.navigation?.delivery);
-  setText('navContactsLink', cfg.navigation?.contacts);
-  setText('heroPill', cfg.brand?.cityPill);
-  setText('heroTitleText', cfg.hero?.title);
-  setText('heroAccent', cfg.hero?.accent);
-  setText('heroDesc', cfg.hero?.description);
-  setText('heroPrimaryBtn', cfg.hero?.ctaPrimary);
-  setText('heroSecondaryBtn', cfg.hero?.ctaSecondary);
-  setText('hitsBadge', cfg.hero?.hitsBadge);
-  setText('hitsTitle', cfg.hero?.hitsTitle);
-  setText('hitsHint', cfg.hero?.hitsHint);
-  renderHeroStats(cfg.stats || []);
-  setText('deliveryTitle', cfg.delivery?.title);
-  setText('pickupTitle', cfg.delivery?.pickupTitle);
-  setText('pickupText', cfg.delivery?.pickupText);
-  const pp = document.getElementById('pickupPoints');
-  if (pp && Array.isArray(cfg.delivery?.pickupPoints)) pp.innerHTML = cfg.delivery.pickupPoints.map(x => `<li>${htmlEscape(x)}</li>`).join('');
-  const pickupSelect = document.querySelector('select[name="pickupAddress"]');
-  if (pickupSelect && Array.isArray(cfg.delivery?.pickupPoints)) pickupSelect.innerHTML = cfg.delivery.pickupPoints.map(x => `<option>${htmlEscape(x)}</option>`).join('');
-  setText('deliveryCardTitle', cfg.delivery?.deliveryTitle);
-  setText('deliveryCardText', cfg.delivery?.deliveryText);
-  setText('paymentTitle', cfg.delivery?.paymentTitle);
-  const paymentText = document.getElementById('paymentText');
-  if (paymentText && Array.isArray(cfg.delivery?.paymentItems)) paymentText.innerHTML = cfg.delivery.paymentItems.map(x => `• ${htmlEscape(x)}`).join('<br>');
-  const contactTitle = document.getElementById('contactsTitle'); if (contactTitle && cfg.contacts?.title) contactTitle.textContent = cfg.contacts.title;
-  const cards = document.getElementById('contactsCards');
-  if (cards && Array.isArray(cfg.contacts?.phones)) cards.innerHTML = cfg.contacts.phones.map(phone => `<div class="contactCard"><div class="contactCard__label">Телефон</div><a class="contactCard__value" href="tel:${htmlEscape(normalizePhone(phone))}">${htmlEscape(phone)}</a></div>`).join('');
-  const actions = document.getElementById('contactActions');
-  if (actions && Array.isArray(cfg.contacts?.socialButtons)) actions.innerHTML = cfg.contacts.socialButtons.map(socialButtonMarkup).join('');
-  const footerText = document.getElementById('footerText'); if (footerText && cfg.footer?.text) footerText.innerHTML = cfg.footer.text;
-  const footerPolicy = document.getElementById('footerPolicyLink'); if (footerPolicy && cfg.footer?.policyLabel) footerPolicy.textContent = cfg.footer.policyLabel;
-  renderPromotions(cfg.promotions);
-  const seoTitle = document.getElementById('seoTitle'); if (seoTitle && cfg.seoText?.title) seoTitle.textContent = cfg.seoText.title;
-  const seoParagraphs = document.getElementById('seoParagraphs'); if (seoParagraphs && Array.isArray(cfg.seoText?.paragraphs)) seoParagraphs.innerHTML = cfg.seoText.paragraphs.map(p => `<p>${htmlEscape(p)}</p>`).join('');
-  if (cfg.businessRules) {
-    MIN_DELIVERY_SUBTOTAL = Number(cfg.businessRules.minDeliverySubtotal ?? MIN_DELIVERY_SUBTOTAL);
-    SMALL_ORDER_DELIVERY_SURCHARGE = Number(cfg.businessRules.smallOrderDeliverySurcharge ?? SMALL_ORDER_DELIVERY_SURCHARGE);
-    BUSINESS_RULES = { ...BUSINESS_RULES, ...cfg.businessRules };
-  }
+  renderPromotions([]);
 }
 async function loadRuntimeConfig() {
-  const [siteCfg, themeCfg, notificationsCfg] = await Promise.all([
-    loadJsonSafe('config/site.json', {}),
-    loadJsonSafe('config/theme.json', {}),
-    loadJsonSafe('config/notifications.json', {})
-  ]);
-  NOTIFICATIONS_CONFIG = notificationsCfg || {};
-  if (notificationsCfg?.orderApiUrl) ORDER_API_URL = notificationsCfg.orderApiUrl;
-  applyThemeConfig(themeCfg || {});
-  applySiteConfig(siteCfg || {});
+  renderPromotions([]);
 }
 
 const els = {
