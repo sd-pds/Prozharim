@@ -57,9 +57,66 @@ function socialButtonMarkup(item = {}) {
   return `<a class="socialBtn" href="${htmlEscape(item.href || '#')}"${isDownload} aria-label="${htmlEscape(item.label || 'Ссылка')}"><span>${htmlEscape(item.label || 'Ссылка')}</span></a>`;
 }
 function promoMarkup(item = {}) {
-  const img = item.image ? `<img class="promoSlide__img" src="${htmlEscape(item.image)}" alt="${htmlEscape(item.title || 'Акция')}">` : '';
+  const title = item.title || 'Акция';
+  const img = item.image ? `<img class="promoSlide__img" src="${htmlEscape(item.image)}" alt="${htmlEscape(title)}" loading="lazy">` : '';
   const content = item.title || item.text || item.badge ? `<div class="promoSlide__content">${item.badge ? `<div class="promoSlide__badge">${htmlEscape(item.badge)}</div>` : ''}${item.title ? `<div class="promoSlide__title">${htmlEscape(item.title)}</div>` : ''}${item.text ? `<div class="promoSlide__text">${htmlEscape(item.text)}</div>` : ''}${item.link ? `<a class="btn btn--ghost" href="${htmlEscape(item.link)}">Подробнее</a>` : ''}</div>` : '';
   return `<article class="promoSlide">${img}${content}</article>`;
+}
+async function assetExists(path) {
+  try {
+    const res = await fetch(path, { method: 'HEAD', cache: 'no-store' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+async function discoverPromoImages() {
+  const candidates = [];
+  const maxAutoPromoFiles = 24;
+  const numberedBases = ['promo-', 'promo_', ''];
+  const exts = ['png', 'webp', 'jpg', 'jpeg', 'svg'];
+
+  for (const base of numberedBases) {
+    for (let i = 1; i <= maxAutoPromoFiles; i += 1) {
+      for (const ext of exts) {
+        candidates.push(`assets/promos/${base}${i}.${ext}`);
+      }
+    }
+  }
+
+  const seen = new Set();
+  const found = [];
+  await Promise.all(candidates.map(async (path) => {
+    if (seen.has(path)) return;
+    seen.add(path);
+    if (await assetExists(path)) found.push(path);
+  }));
+
+  return found.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+}
+async function renderPromotions(configPromotions = []) {
+  const promoSlider = document.getElementById('promoSlider');
+  if (!promoSlider) return;
+
+  const configItems = (Array.isArray(configPromotions) ? configPromotions : [])
+    .filter(item => item && (item.image || item.title || item.text))
+    .map(item => ({ ...item }));
+
+  const configImageSet = new Set(configItems.map(item => item.image).filter(Boolean));
+  const autoImages = await discoverPromoImages();
+  const autoItems = autoImages
+    .filter(path => !configImageSet.has(path))
+    .map(path => ({ image: path, title: 'Акция' }));
+
+  const promoItems = [...configItems, ...autoItems];
+
+  if (!promoItems.length) {
+    const section = document.getElementById('promotions');
+    if (section) section.hidden = true;
+    return;
+  }
+
+  promoSlider.innerHTML = promoItems.map(promoMarkup).join('');
 }
 function renderHeroStats(stats = []) {
   const wrap = document.getElementById('heroStats');
@@ -143,7 +200,7 @@ function applySiteConfig(cfg = {}) {
   if (actions && Array.isArray(cfg.contacts?.socialButtons)) actions.innerHTML = cfg.contacts.socialButtons.map(socialButtonMarkup).join('');
   const footerText = document.getElementById('footerText'); if (footerText && cfg.footer?.text) footerText.innerHTML = cfg.footer.text;
   const footerPolicy = document.getElementById('footerPolicyLink'); if (footerPolicy && cfg.footer?.policyLabel) footerPolicy.textContent = cfg.footer.policyLabel;
-  const promoSlider = document.getElementById('promoSlider'); if (promoSlider && Array.isArray(cfg.promotions)) promoSlider.innerHTML = cfg.promotions.filter(item => item && (item.image || item.title || item.text)).map(promoMarkup).join('');
+  renderPromotions(cfg.promotions);
   const seoTitle = document.getElementById('seoTitle'); if (seoTitle && cfg.seoText?.title) seoTitle.textContent = cfg.seoText.title;
   const seoParagraphs = document.getElementById('seoParagraphs'); if (seoParagraphs && Array.isArray(cfg.seoText?.paragraphs)) seoParagraphs.innerHTML = cfg.seoText.paragraphs.map(p => `<p>${htmlEscape(p)}</p>`).join('');
   if (cfg.businessRules) {
