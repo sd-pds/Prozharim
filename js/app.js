@@ -716,14 +716,17 @@ function getHappyHoursDiscount() {
 }
 
 function getPromoDiscount() {
-  return getManualPromoDiscount() + getHappyHoursDiscount();
+  const happyHoursDiscount = getHappyHoursDiscount();
+  if (happyHoursDiscount > 0) return happyHoursDiscount;
+  return getManualPromoDiscount();
 }
 
 function getActiveDiscountLabel() {
-  const labels = [];
-  if (getHappyHoursDiscount() > 0) labels.push('Счастливые часы');
-  if (state.promo.applied && getManualPromoDiscount() > 0) labels.push(state.promo.code || state.promo.title || 'Промокод');
-  return labels.join(' + ') || '—';
+  if (getHappyHoursDiscount() > 0) return 'Счастливые часы';
+  if (state.promo.applied && getManualPromoDiscount() > 0) {
+    return state.promo.code || state.promo.title || 'Промокод';
+  }
+  return '—';
 }
 
 function clearPromoState(resetInput = false) {
@@ -1477,7 +1480,7 @@ function buildOrderPayload(form) {
   const nightMarkup = getNightMarkup();
   const promoDiscount = getPromoDiscount();
   const happyHoursDiscount = getHappyHoursDiscount();
-  const manualPromoDiscount = getManualPromoDiscount();
+  const manualPromoDiscount = happyHoursDiscount > 0 ? 0 : getManualPromoDiscount();
 
   const total = Math.max(0, subtotal + cutleryPrice + nightMarkup + (delivery.price || 0) - promoDiscount);
 
