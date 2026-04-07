@@ -695,9 +695,35 @@ function getBaseTotalBeforePromo() {
   return subtotal + cutleryPrice + nightMarkup + deliveryPrice;
 }
 
-function getPromoDiscount() {
+function getManualPromoDiscount() {
   if (!state.promo.applied || !state.promo.percent) return 0;
   return Math.min(getBaseTotalBeforePromo(), Math.round(getBaseTotalBeforePromo() * state.promo.percent / 100));
+}
+
+function isHappyHoursActive(date = getEffectiveOrderDate()) {
+  const d = toOrenburgDate(date);
+  const day = d.getDay();
+  const minutes = d.getHours() * 60 + d.getMinutes();
+  const isWeekday = day >= 1 && day <= 5;
+  return isWeekday && minutes >= 11 * 60 && minutes < 16 * 60;
+}
+
+function getHappyHoursDiscount() {
+  const subtotal = cartSum();
+  if (subtotal <= 0) return 0;
+  if (!isHappyHoursActive(getEffectiveOrderDate())) return 0;
+  return Math.round(subtotal * 0.10);
+}
+
+function getPromoDiscount() {
+  return getManualPromoDiscount() + getHappyHoursDiscount();
+}
+
+function getActiveDiscountLabel() {
+  const labels = [];
+  if (getHappyHoursDiscount() > 0) labels.push('Счастливые часы');
+  if (state.promo.applied && getManualPromoDiscount() > 0) labels.push(state.promo.code || state.promo.title || 'Промокод');
+  return labels.join(' + ') || '—';
 }
 
 function clearPromoState(resetInput = false) {
@@ -1326,11 +1352,11 @@ function renderTotals() {
   }
 
   if (els.promoDiscountRow && els.sumPromoDiscount && els.promoBadge) {
-    if (promoDiscount > 0 && state.promo.applied) {
+    if (promoDiscount > 0) {
       els.promoDiscountRow.hidden = false;
       els.promoDiscountRow.style.display = "flex";
       els.sumPromoDiscount.textContent = `−${rub(promoDiscount)}`;
-      els.promoBadge.textContent = state.promo.code;
+      els.promoBadge.textContent = getActiveDiscountLabel();
     } else {
       els.promoDiscountRow.hidden = true;
       els.promoDiscountRow.style.display = "none";
@@ -1450,6 +1476,8 @@ function buildOrderPayload(form) {
   const cutleryPrice = getCutleryPrice();
   const nightMarkup = getNightMarkup();
   const promoDiscount = getPromoDiscount();
+  const happyHoursDiscount = getHappyHoursDiscount();
+  const manualPromoDiscount = getManualPromoDiscount();
 
   const total = Math.max(0, subtotal + cutleryPrice + nightMarkup + (delivery.price || 0) - promoDiscount);
 
@@ -1479,11 +1507,24 @@ function buildOrderPayload(form) {
       tariffLabel: getTariffInfo(getEffectiveOrderDate()).tariffLabel,
       nightMarkup
     },
-    promo: state.promo.applied ? {
+    promo: (state.promo.applied || happyHoursDiscount > 0) ? {
+      code: state.promo.applied ? state.promo.code : 'HAPPY_HOURS',
+      title: [happyHoursDiscount > 0 ? 'Счастливые часы' : '', state.promo.applied ? (state.promo.title || state.promo.code) : '']
+        .filter(Boolean)
+        .join(' + '),
+      percent: state.promo.applied ? state.promo.percent : 10,
+      discount: promoDiscount
+    } : null,
+    happyHours: happyHoursDiscount > 0 ? {
+      title: 'Счастливые часы',
+      percent: 10,
+      discount: happyHoursDiscount
+    } : null,
+    manualPromo: manualPromoDiscount > 0 ? {
       code: state.promo.code,
       title: state.promo.title,
       percent: state.promo.percent,
-      discount: promoDiscount
+      discount: manualPromoDiscount
     } : null,
     delivery,
     total,
