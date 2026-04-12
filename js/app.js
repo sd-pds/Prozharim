@@ -99,14 +99,21 @@ async function renderPromotions(configPromotions = []) {
   if (!promoSlider) return;
 
   const configItems = (Array.isArray(configPromotions) ? configPromotions : [])
-    .filter(item => item && item.visible !== false && (item.image || item.title || item.text))
-    .map(item => ({ ...item }));
+    .filter(item => item && item.visible !== false)
+    .map(item => ({
+      ...item,
+      image: item.image || item.path || '',
+      title: item.title || item.name || 'Акция'
+    }))
+    .filter(item => item.image || item.title || item.text);
 
   const configImageSet = new Set(configItems.map(item => item.image).filter(Boolean));
   const autoImages = await discoverPromoImages();
-  const autoItems = autoImages
-    .filter(path => !configImageSet.has(path))
-    .map(path => ({ image: path, title: 'Акция' }));
+  const autoItems = configItems.length
+    ? []
+    : autoImages
+        .filter(path => !configImageSet.has(path))
+        .map(path => ({ image: path, title: 'Акция' }));
 
   const promoItems = [...configItems, ...autoItems];
 
