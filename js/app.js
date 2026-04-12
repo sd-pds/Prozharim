@@ -99,7 +99,7 @@ async function renderPromotions(configPromotions = []) {
   if (!promoSlider) return;
 
   const configItems = (Array.isArray(configPromotions) ? configPromotions : [])
-    .filter(item => item && (item.image || item.title || item.text))
+    .filter(item => item && item.visible !== false && (item.image || item.title || item.text))
     .map(item => ({ ...item }));
 
   const configImageSet = new Set(configItems.map(item => item.image).filter(Boolean));
@@ -218,6 +218,7 @@ let ZONES = null;
 let ZONES_DAY = null;
 let ZONES_NIGHT = null;
 let PROMOS = [];
+let PROMOTION_BANNERS = [];
 
 let state = {
   category: "Все",
@@ -1841,8 +1842,9 @@ async function init() {
     }
   });
 
-  MENU = await fetch("data/menu.json").then(r => r.json());
+  MENU = await fetch("data/menu.json").then(r => r.json()).then(items => (Array.isArray(items) ? items : []).filter(item => item?.visible !== false));
   PROMOS = await fetch("data/promokod.json").then(r => r.json()).then(parsePromos).catch(() => []);
+  PROMOTION_BANNERS = await fetch("data/promotions.json", { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
   ZONES_DAY = await fetch("data/zones_day.geojson").then(r => r.json()).catch(() => null);
   ZONES_NIGHT = await fetch("data/zones_night.geojson").then(r => r.json()).catch(() => null);
   ZONES = ZONES_DAY || ZONES_NIGHT || await fetch("data/zones.geojson").then(r => r.json()).catch(() => null);
@@ -1855,6 +1857,7 @@ async function init() {
   renderHits();
   renderCartBadge();
   renderTotals();
+  await renderPromotions(PROMOTION_BANNERS);
 
   setMode("delivery");
 }
