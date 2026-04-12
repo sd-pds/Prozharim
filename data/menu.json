@@ -328,7 +328,8 @@
     "hit": false,
     "img": "./assets/photos/Соус Барбекью HEINZ.webp",
     "price": 30,
-    "weight": "25 г"
+    "weight": "25 г",
+    "visible": false
   },
   {
     "id": "sous-kislo-sladkiy-heinz",
