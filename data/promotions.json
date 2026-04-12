@@ -1,0 +1,27 @@
+[
+  {
+    "name": "promo-1.webp",
+    "path": "./assets/promos/promo-1.webp",
+    "visible": true
+  },
+  {
+    "name": "promo-2.webp",
+    "path": "./assets/promos/promo-2.webp",
+    "visible": false
+  },
+  {
+    "name": "promo-3.webp",
+    "path": "./assets/promos/promo-3.webp",
+    "visible": true
+  },
+  {
+    "name": "promo-4.webp",
+    "path": "./assets/promos/promo-4.webp",
+    "visible": true
+  },
+  {
+    "name": "promo-5.webp",
+    "path": "./assets/promos/promo-5.webp",
+    "visible": true
+  }
+]
