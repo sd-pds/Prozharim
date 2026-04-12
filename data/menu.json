@@ -7,7 +7,8 @@
     "price": 495,
     "weight": "350 г",
     "img": "./assets/photos/Шашлык из куриного филе.webp",
-    "hit": true
+    "hit": true,
+    "visible": false
   },
   {
     "id": "shashlyk-iz-svininy",
