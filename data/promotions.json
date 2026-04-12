@@ -7,7 +7,7 @@
   {
     "name": "promo-2.webp",
     "path": "./assets/promos/promo-2.webp",
-    "visible": false
+    "visible": true
   },
   {
     "name": "promo-3.webp",
