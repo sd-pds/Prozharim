@@ -8,7 +8,7 @@
     "weight": "350 г",
     "img": "./assets/photos/Шашлык из куриного филе.webp",
     "hit": true,
-    "visible": false
+    "visible": true
   },
   {
     "id": "shashlyk-iz-svininy",
