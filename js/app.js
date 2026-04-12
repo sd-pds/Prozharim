@@ -1844,7 +1844,7 @@ async function init() {
 
   MENU = await fetch("data/menu.json").then(r => r.json()).then(items => (Array.isArray(items) ? items : []).filter(item => item?.visible !== false));
   PROMOS = await fetch("data/promokod.json").then(r => r.json()).then(parsePromos).catch(() => []);
-  PROMOTION_BANNERS = await fetch("data/promotions.json", { cache: 'no-store' }).then(r => r.ok ? r.json() : []).catch(() => []);
+  PROMOTION_BANNERS = await fetch("data/promotions.json", { cache: "no-store" }).then(r => r.ok ? r.json() : []).catch(() => []);
   ZONES_DAY = await fetch("data/zones_day.geojson").then(r => r.json()).catch(() => null);
   ZONES_NIGHT = await fetch("data/zones_night.geojson").then(r => r.json()).catch(() => null);
   ZONES = ZONES_DAY || ZONES_NIGHT || await fetch("data/zones.geojson").then(r => r.json()).catch(() => null);
