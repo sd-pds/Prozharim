@@ -1,5 +1,10 @@
 [
   {
+    "name": "promo-0.webp",
+    "path": "./assets/promos/promo-0.webp",
+    "visible": true
+  },
+  {
     "name": "promo-1.webp",
     "path": "./assets/promos/promo-1.webp",
     "visible": true
